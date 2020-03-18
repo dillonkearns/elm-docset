@@ -75,7 +75,7 @@ class Type(object):
         self.cases = json["cases"]
      
     def get_markdown(self):
-        ret = ['<div style="padding: 0px; margin: 0px; width: 980px; height: 1px; background-color: rgb(216, 221, 225);"></div>']
+        ret = ['<div style="padding: 0px; margin: 0px; height: 1px; background-color: rgb(216, 221, 225);"></div>']
         
         top = '<div class="mono"><br />' 
         top += name_link(self.safe_name, "type")
@@ -113,7 +113,7 @@ class Alias(object):
         self.type = json["type"]
     
     def get_markdown(self):
-        ret = ['<div style="padding: 0px; margin: 0px; width: 980px; height: 1px; background-color: rgb(216, 221, 225);"></div>']
+        ret = ['<div style="padding: 0px; margin: 0px; height: 1px; background-color: rgb(216, 221, 225);"></div>']
         
         top = '<div class="mono"><br />'
         
@@ -192,7 +192,7 @@ class Value(object):
             self.assocPrec = None
     
     def get_markdown(self):
-        ret = ['<div style="padding: 0px; margin: 0px; width: 980px; height: 1px; background-color: rgb(216, 221, 225);"></div>']
+        ret = ['<div style="padding: 0px; margin: 0px; height: 1px; background-color: rgb(216, 221, 225);"></div>']
         
         bits =  self.type.split("->")
 
