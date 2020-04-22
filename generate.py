@@ -4,6 +4,7 @@
 from __future__ import print_function
 import shutil, os, re 
 import sqlite3
+import requests  
 
 import json
 from cache import fetch
@@ -18,7 +19,7 @@ import string
 
 opj = os.path.join
 
-pkgsURL = "http://package.elm-lang.org/"
+pkgsURL = "https://package.elm-lang.org/"
 rexp = re.compile("(.*)\n@docs\\s+([a-zA-Z0-9_']+(?:,\\s*[a-zA-Z0-9_']+)*)")
 
 
@@ -241,15 +242,14 @@ class Module(object):
 
         if comment.strip() : ret.append(comment)
         
-        items = [i.strip() for i in hints.split(",")]
-        
+        items = [i.strip().strip("\n\n\n#") for i in hints.split(",")]
+
         for item in items:
             try:
                 if item.startswith("docs"): item = item.split()[1]
                 if item.startswith("("): item = item[1:-1]
 
                 if item in self.values:
-                    
                     da = self.insert_in_db(self.values[item].qualified_name, self.values[item].name, "Function")
                     ret.append(da) #DashAnchor
                     ret.append(self.values[item].markdown)
@@ -272,7 +272,8 @@ class Module(object):
                     da = self.insert_in_db(self.aliases[item].qualified_name, self.aliases[item].name, "Type")
                     ret.append(da) #DashAnchor
                     ret.append(self.aliases[item].markdown)
-            except: 
+            except e: 
+                print("Problem with: `" + item + "`: " + e)
                 pass # if the item is invalid we don't introduce it.                
 
         return "\n\n".join(ret)
@@ -320,7 +321,7 @@ def docname(pkg, module=None):
 def generate_all():
     global pkgs
     print("feching all packages list ..."),
-    all_pkgs = fetch(pkgsURL+"search.json")
+    all_pkgs = requests.get(pkgsURL+"search.json").json()
     print("DONE!") 
     pkgs = sorted(all_pkgs, key=lambda a: a["name"].lower())
     
@@ -334,7 +335,7 @@ def generate_all():
         pkg_name = pkg["name"]
         pkg_file = docname(pkg_name)
         try:
-            pkg_version = pkg["versions"][-1]
+            pkg_version = pkg["version"]
         except IndexError:
             print ("No version found, skipping package: %s"%pkg_name)
             continue
@@ -369,7 +370,7 @@ if __name__ == '__main__':
 
     if DEBUG:
         from debug import debug_module
-        debug_module("elm/http", "Http")
+        debug_module("mdgriffith/elm-ui", "Element.Font")
     else:
         prepare()
 
