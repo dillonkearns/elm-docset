@@ -351,7 +351,7 @@ def generate_all():
             links.append((module.name, module_file))
             with open(opj(docpath, module_file), "wb") as fo:  
                 html = toHtml(module.markdown).replace('<code>', '<code class="elm">') # fix syntax detection
-                data = { "pkg_link": (pkg_name, pkg_file), "module_name":module.name, "markdown":html}
+                data = { "pkg_link": (pkg_name, pkg_file), "module_name":module.name, "markdown":html, "pkg_name":pkg_name, "version":pkg_version}
                 fo.write(moduleTemplate(data))
             cur.execute('INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (?,?,?)', (module.name + ' (' + pkg_name + ')', 'Module', module_file))
 

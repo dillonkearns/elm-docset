@@ -38,7 +38,7 @@ index = u"""<!DOCTYPE html>
 """
 
 package = u"""<!DOCTYPE html>
-<html lang="en">
+<html lang="en"><!-- Online page at https://package.elm-lang.org/packages/{{pkg_name}}/{{version}}/ -->
   <head>
     <meta charset="utf-8">
     <link href="style.css" media="all" rel="stylesheet">
@@ -66,7 +66,7 @@ package = u"""<!DOCTYPE html>
 """
 
 module = u"""<!DOCTYPE html>
-<html lang="en">
+<html lang="en"><!-- Online page at https://package.elm-lang.org/packages/{{pkg_name}}/{{version}}/{{module_name}} -->
   <head>
     <meta charset="utf-8">
     <link href="style.css" media="all" rel="stylesheet">
