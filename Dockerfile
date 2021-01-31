@@ -1,5 +1,8 @@
 FROM python:2.7-slim
 
+RUN apt-get update && apt-get -y upgrade
+RUN apt-get -y install jq sed curl
+
 WORKDIR /usr/src/app
 
 COPY requirements.txt ./

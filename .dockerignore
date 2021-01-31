@@ -1,0 +1,8 @@
+Elm.tgz
+Elm.docset
+cache.json
+doc-dist
+
+.DS_Store
+.git
+.gitignore
