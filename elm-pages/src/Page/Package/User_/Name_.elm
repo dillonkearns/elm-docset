@@ -6,13 +6,16 @@ import DataSource.Http
 import Head
 import Head.Seo as Seo
 import Html
+import Html.Attributes as Attrs
 import Markdown
 import OptimizedDecoder as Decode
 import Page exposing (Page, PageWithState, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
 import Pages.Secrets as Secrets
 import Pages.Url
+import Path
 import Result
+import Route
 import Shared
 import View exposing (View)
 
@@ -46,6 +49,29 @@ packagesDataSource =
         (Decode.list Data.packageInfoDecoder)
 
 
+modulesDataSource : String -> String -> DataSource { user : String, name : String, modules : List Data.Module }
+modulesDataSource user name =
+    DataSource.Http.get
+        (Secrets.succeed ("https://package.elm-lang.org/packages/" ++ user ++ "/" ++ name ++ "/latest/docs.json"))
+        (Decode.list Data.moduleDecoder)
+        |> DataSource.map
+            (\modules ->
+                { user = user, name = name, modules = modules }
+            )
+
+
+readmeDataSource user name =
+    DataSource.Http.unoptimizedRequest
+        (Secrets.succeed
+            { url = "https://package.elm-lang.org/packages/" ++ user ++ "/" ++ name ++ "/latest/README.md"
+            , method = "GET"
+            , headers = []
+            , body = DataSource.Http.emptyBody
+            }
+        )
+        (DataSource.Http.expectString Result.Ok)
+
+
 routes : DataSource (List RouteParams)
 routes =
     let
@@ -61,17 +87,17 @@ routes =
         |> DataSource.map toRouteParams
 
 
+type alias Data =
+    { modulesUrls : List String
+    , readme : String
+    }
+
+
 data : RouteParams -> DataSource Data
 data routeParams =
-    DataSource.Http.unoptimizedRequest
-        (Secrets.succeed
-            { url = "https://package.elm-lang.org/packages/" ++ routeParams.user ++ "/" ++ routeParams.name ++ "/latest/README.md"
-            , method = "GET"
-            , headers = []
-            , body = DataSource.Http.emptyBody
-            }
-        )
-        (DataSource.Http.expectString Result.Ok)
+    DataSource.map2 (\readme { modules } -> { modulesUrls = List.map .slug modules, readme = readme })
+        (readmeDataSource routeParams.user routeParams.name)
+        (modulesDataSource routeParams.user routeParams.name)
 
 
 head :
@@ -94,10 +120,6 @@ head static =
         |> Seo.website
 
 
-type alias Data =
-    String
-
-
 view :
     Maybe PageUrl
     -> Shared.Model
@@ -106,9 +128,22 @@ view :
 view maybeUrl sharedModel static =
     let
         toMarkdown =
-            static.data
+            static.data.readme
                 |> Markdown.toHtml []
+
+        toLink user name moduleName =
+            Html.a
+                [ Route.Package__User___Name___SPLAT_ { user = user, name = name, splat = ( moduleName, [] ) }
+                    |> Route.toPath
+                    |> Path.toAbsolute
+                    |> Attrs.href
+                ]
+                [ Html.text <| moduleName ]
+
+        modules =
+            static.data.modulesUrls
+                |> List.map (\url -> Html.li [] [ toLink static.routeParams.user static.routeParams.name url ])
     in
     { title = ""
-    , body = [ toMarkdown ]
+    , body = [ Html.div [] [ Html.ul [] modules ], toMarkdown ]
     }
