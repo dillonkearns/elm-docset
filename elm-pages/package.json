@@ -1,0 +1,13 @@
+{
+  "name": "elm-pages-app",
+  "scripts": {
+    "start": "elm-pages dev --keep-cache",
+    "build": "elm-pages build --keep-cache",
+    "postinstall": "elm-tooling install"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "elm-pages": "^2.1.4",
+    "elm-tooling": "^1.3.0"
+  }
+}
