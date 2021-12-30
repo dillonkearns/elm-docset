@@ -7,7 +7,8 @@ import Head
 import Head.Seo as Seo
 import Html
 import Html.Attributes as Attrs
-import Markdown
+import Markdown.Parser
+import Markdown.Renderer
 import OptimizedDecoder as Decode
 import Page exposing (Page, PageWithState, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
@@ -57,10 +58,6 @@ modulesDataSource user name =
             (\modules ->
                 { user = user, name = name, modules = modules }
             )
-
-
-testingDataSource =
-    DataSource.succeed [ { name = "elm/browser", version = "123", summary = "smth" } ]
 
 
 routes : DataSource (List RouteParams)
@@ -135,9 +132,23 @@ view :
     -> View Msg
 view maybeUrl sharedModel static =
     let
+        deadEndsToString ends =
+            ends
+                |> List.map Markdown.Parser.deadEndToString
+                |> String.join "\n"
+
         toMarkdown =
-            static.data.moduleData.comment
-                |> Markdown.toHtml []
+            case
+                static.data.moduleData.comment
+                    |> Markdown.Parser.parse
+                    |> Result.mapError deadEndsToString
+                    |> Result.andThen (Markdown.Renderer.render Markdown.Renderer.defaultHtmlRenderer)
+            of
+                Ok rendered ->
+                    Html.div [] rendered
+
+                Err error ->
+                    Html.div [] [ Html.text error ]
 
         toLink user name =
             Html.a
