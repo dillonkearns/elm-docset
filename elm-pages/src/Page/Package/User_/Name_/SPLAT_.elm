@@ -48,15 +48,15 @@ packagesDataSource =
         (Decode.list Data.packageInfoDecoder)
 
 
-modulesDataSource : String -> String -> DataSource {user: String, name: String, modules: (List Data.Module)}
+modulesDataSource : String -> String -> DataSource { user : String, name : String, modules : List Data.Module }
 modulesDataSource user name =
     DataSource.Http.get
-        (Secrets.succeed ("https://package.elm-lang.org/packages/" ++ user ++ "/"++ name ++ "/latest/docs.json"))
+        (Secrets.succeed ("https://package.elm-lang.org/packages/" ++ user ++ "/" ++ name ++ "/latest/docs.json"))
         (Decode.list Data.moduleDecoder)
         |> DataSource.map
-                                    (\modules ->
-                                        { user = user, name = name, modules = modules }
-                                    )
+            (\modules ->
+                { user = user, name = name, modules = modules }
+            )
 
 
 testingDataSource =
@@ -72,16 +72,15 @@ routes =
 
         toRouteParams =
             List.map
-                (\{user, name, modules} -> toSplats user name modules)
+                (\{ user, name, modules } -> toSplats user name modules)
                 >> List.concat
     in
     packagesDataSource
-        --|> DataSource.map (List.take 10)
         |> DataSource.andThen
             (\packages ->
                 packages
                     |> List.map
-                        (\{splittedName} ->
+                        (\{ splittedName } ->
                             modulesDataSource (Tuple.first splittedName) (Tuple.second splittedName)
                         )
                     |> DataSource.combine
@@ -93,9 +92,9 @@ data : RouteParams -> DataSource Data
 data routeParams =
     modulesDataSource routeParams.user routeParams.name
         |> DataSource.andThen
-            (\{modules} ->
-              modules
-              |> List.filter (\{ slug } -> Tuple.first routeParams.splat == slug)
+            (\{ modules } ->
+                modules
+                    |> List.filter (\{ slug } -> Tuple.first routeParams.splat == slug)
                     |> List.head
                     |> Maybe.map (\moduleData -> DataSource.succeed { user = routeParams.user, name = routeParams.name, moduleData = moduleData })
                     |> Maybe.withDefault (DataSource.fail "")
@@ -151,9 +150,9 @@ view maybeUrl sharedModel static =
     in
     { title = ""
     , body =
-       [ toLink static.data.user static.data.name
-       , Html.h1 [] [ Html.text static.data.moduleData.name ]
-       , Html.hr [] []
-       , toMarkdown
-       ]
+        [ toLink static.data.user static.data.name
+        , Html.h1 [] [ Html.text static.data.moduleData.name ]
+        , Html.hr [] []
+        , toMarkdown
+        ]
     }

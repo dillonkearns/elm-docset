@@ -5,9 +5,10 @@
     "build": "elm-pages build --keep-cache",
     "postinstall": "elm-tooling install"
   },
-  "devDependencies": {},
   "dependencies": {
-    "elm-pages": "^2.1.4",
+    "elm-optimize-level-2": "^0.2.3",
+    "elm-pages": "^2.1.11",
+    "elm-review": "^2.7.0",
     "elm-tooling": "^1.3.0"
   }
 }
