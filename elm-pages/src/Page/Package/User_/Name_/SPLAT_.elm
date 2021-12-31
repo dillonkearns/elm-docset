@@ -8,8 +8,10 @@ import Head
 import Head.Seo as Seo
 import Html
 import Html.Attributes as Attrs
+import Markdown.Html
 import Markdown.Parser
 import Markdown.Renderer
+import Maybe.Extra
 import OptimizedDecoder as Decode
 import Page exposing (Page, PageWithState, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
@@ -134,7 +136,20 @@ view :
 view maybeUrl sharedModel static =
     let
         customRenderer =
-            Markdown.Renderer.defaultHtmlRenderer
+            let
+                renderer =
+                    Markdown.Renderer.defaultHtmlRenderer
+            in
+            { renderer
+                | html =
+                    Markdown.Html.oneOf
+                        [ Markdown.Html.tag "union"
+                            (\name children ->
+                                Html.p [] [ Html.span [] [ Html.text "type " ], Html.text name ]
+                            )
+                            |> Markdown.Html.withAttribute "name"
+                        ]
+            }
 
         deadEndsToString ends =
             ends
@@ -144,12 +159,20 @@ view maybeUrl sharedModel static =
         markdownForValues { comment, type_, name } =
             name ++ ": " ++ type_ ++ "\n\n" ++ comment
 
+        markdownForUnions { comment, name, args, cases } =
+            "<union name='" ++ name ++ "'/>" ++ "\n\n" ++ comment
+
+        replaceUnions item =
+            Dict.get item static.data.moduleData.unions
+                |> Maybe.map markdownForUnions
+
         replaceValues item =
             Dict.get item static.data.moduleData.values
                 |> Maybe.map markdownForValues
 
         replaceItem item =
-            replaceValues item
+            item
+                |> Maybe.Extra.oneOf [ replaceValues, replaceUnions ]
                 |> Maybe.withDefault "N/A"
 
         replaceDocs docsLine =
