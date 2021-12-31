@@ -3,6 +3,7 @@ module Page.Package.User_.Name_.SPLAT_ exposing (Data, Model, Msg, page)
 import Data
 import DataSource exposing (DataSource)
 import DataSource.Http
+import Dict
 import Head
 import Head.Seo as Seo
 import Html
@@ -132,17 +133,50 @@ view :
     -> View Msg
 view maybeUrl sharedModel static =
     let
+        customRenderer =
+            Markdown.Renderer.defaultHtmlRenderer
+
         deadEndsToString ends =
             ends
                 |> List.map Markdown.Parser.deadEndToString
                 |> String.join "\n"
 
+        markdownForValues { comment, type_, name } =
+            name ++ ": " ++ type_ ++ "\n\n" ++ comment
+
+        replaceValues item =
+            Dict.get item static.data.moduleData.values
+                |> Maybe.map markdownForValues
+
+        replaceItem item =
+            replaceValues item
+                |> Maybe.withDefault "N/A"
+
+        replaceDocs docsLine =
+            String.dropLeft 6 docsLine
+                |> String.split ", "
+                |> List.map (\item -> "### " ++ item ++ "\n" ++ replaceItem item)
+                |> String.join "\n"
+
+        updatedComment =
+            static.data.moduleData.comment
+                |> String.split "\n"
+                |> List.map
+                    (\line ->
+                        if String.startsWith "@docs" line then
+                            replaceDocs line
+
+                        else
+                            line
+                    )
+                |> String.join "\n"
+
         toMarkdown =
             case
-                static.data.moduleData.comment
+                updatedComment
                     |> Markdown.Parser.parse
                     |> Result.mapError deadEndsToString
-                    |> Result.andThen (Markdown.Renderer.render Markdown.Renderer.defaultHtmlRenderer)
+                    |> Result.andThen (Markdown.Renderer.render customRenderer)
             of
                 Ok rendered ->
                     Html.div [] rendered
