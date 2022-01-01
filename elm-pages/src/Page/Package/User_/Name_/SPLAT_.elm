@@ -129,6 +129,36 @@ type alias Data =
     }
 
 
+aliasTag =
+    Markdown.Html.tag "alias" renderAlias
+        |> Markdown.Html.withAttribute "name"
+        |> Markdown.Html.withAttribute "type"
+        |> Markdown.Html.withAttribute "args"
+
+
+markdownForAlias { comment, type_, name, args } =
+    "<alias name='"
+        ++ name
+        ++ "' type='"
+        ++ type_
+        ++ "' args='"
+        ++ String.join " " args
+        ++ "'/>"
+        ++ comment
+
+
+renderAlias name type_ args _ =
+    Html.div []
+        [ Html.p []
+            [ Html.text "type alias"
+            , Html.text name
+            , Html.text " "
+            , Html.text args
+            , Html.pre [] [ Html.text type_ ]
+            ]
+        ]
+
+
 binOpTag =
     Markdown.Html.tag "binop" renderBinOps
         |> Markdown.Html.withAttribute "name"
@@ -141,10 +171,7 @@ markdownForBinOps { comment, type_, name } =
         ++ "' type='"
         ++ type_
         ++ "'/>"
-
-
-
---++ comment
+        ++ comment
 
 
 renderBinOps name type_ _ =
@@ -243,6 +270,7 @@ view maybeUrl sharedModel static =
                         [ unionTag
                         , valueTag
                         , binOpTag
+                        , aliasTag
                         ]
             }
 
@@ -261,6 +289,7 @@ view maybeUrl sharedModel static =
                     [ replaceFn moduleData.values markdownForValues
                     , replaceFn moduleData.unions markdownForUnions
                     , replaceFn moduleData.binops markdownForBinOps
+                    , replaceFn moduleData.aliases markdownForAlias
                     ]
                 |> Maybe.withDefault "N/A"
 
