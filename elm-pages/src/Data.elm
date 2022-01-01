@@ -37,9 +37,25 @@ moduleDecoder =
     Decode.decode Module
         |> Decode.required "name" Decode.string
         |> Decode.required "comment" Decode.string
+        |> Decode.required "binops" decodeBinOps
         |> Decode.required "unions" decodeUnions
         |> Decode.required "values" decodeValues
         |> Decode.required "name" (Decode.string |> Decode.map (String.replace "." "-"))
+
+
+decodeBinOps : Decode.Decoder (Dict String BinOp)
+decodeBinOps =
+    Decode.list decodeBinOp
+        |> Decode.map (List.map (\value -> ( value.name, value )))
+        |> Decode.map Dict.fromList
+
+
+decodeBinOp : Decode.Decoder BinOp
+decodeBinOp =
+    Decode.decode Value
+        |> Decode.required "name" (Decode.map (\binop -> "(" ++ binop ++ ")") Decode.string)
+        |> Decode.required "type" Decode.string
+        |> Decode.required "comment" Decode.string
 
 
 decodeValues : Decode.Decoder (Dict String Value)
@@ -82,6 +98,7 @@ decodeUnion =
 type alias Module =
     { name : String
     , comment : String
+    , binops : Dict String BinOp
     , unions : Dict String Union
     , values : Dict String Value
     , slug : String
@@ -100,6 +117,13 @@ type alias Union =
     , comment : String
     , args : List String
     , cases : List (List String)
+    }
+
+
+type alias BinOp =
+    { name : String
+    , type_ : String
+    , comment : String
     }
 
 

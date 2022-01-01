@@ -21,6 +21,7 @@ import Path
 import Result
 import Route
 import Shared
+import Url
 import View exposing (View)
 
 
@@ -128,6 +129,34 @@ type alias Data =
     }
 
 
+binOpTag =
+    Markdown.Html.tag "binop" renderBinOps
+        |> Markdown.Html.withAttribute "name"
+        |> Markdown.Html.withAttribute "type"
+
+
+markdownForBinOps { comment, type_, name } =
+    "<binop name='"
+        ++ Url.percentEncode name
+        ++ "' type='"
+        ++ type_
+        ++ "'/>"
+
+
+
+--++ comment
+
+
+renderBinOps name type_ _ =
+    Html.div []
+        [ Html.p []
+            [ Html.text (Url.percentDecode name |> Maybe.withDefault name)
+            , Html.text ": "
+            , Html.pre [] [ Html.text type_ ]
+            ]
+        ]
+
+
 valueTag =
     Markdown.Html.tag "function" renderValue
         |> Markdown.Html.withAttribute "name"
@@ -169,9 +198,8 @@ markdownForUnions { comment, name, args, cases } =
         ++ (List.map (String.join " ") cases
                 |> String.join "|"
            )
-        ++ "'>"
+        ++ "'/>"
         ++ comment
-        ++ "</union>"
 
 
 renderUnion name args cases children =
@@ -198,6 +226,9 @@ view :
     -> View Msg
 view maybeUrl sharedModel static =
     let
+        binops =
+            Debug.log "binops" moduleData.binops
+
         moduleData =
             static.data.moduleData
 
@@ -211,6 +242,7 @@ view maybeUrl sharedModel static =
                     Markdown.Html.oneOf
                         [ unionTag
                         , valueTag
+                        , binOpTag
                         ]
             }
 
@@ -228,12 +260,14 @@ view maybeUrl sharedModel static =
                 |> Maybe.Extra.oneOf
                     [ replaceFn moduleData.values markdownForValues
                     , replaceFn moduleData.unions markdownForUnions
+                    , replaceFn moduleData.binops markdownForBinOps
                     ]
                 |> Maybe.withDefault "N/A"
 
         replaceDocs docsLine =
             String.dropLeft 6 docsLine
                 |> String.split ", "
+                |> Debug.log "items"
                 |> List.map (\item -> "### " ++ item ++ "\n" ++ replaceItem item)
                 |> String.join "\n"
 
@@ -249,6 +283,7 @@ view maybeUrl sharedModel static =
                             line
                     )
                 |> String.join "\n"
+                |> Debug.log "markdown"
 
         toMarkdown =
             case
