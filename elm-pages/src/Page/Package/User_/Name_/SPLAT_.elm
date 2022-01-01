@@ -128,6 +128,69 @@ type alias Data =
     }
 
 
+valueTag =
+    Markdown.Html.tag "function" renderValue
+        |> Markdown.Html.withAttribute "name"
+        |> Markdown.Html.withAttribute "type"
+
+
+markdownForValues { comment, type_, name } =
+    "<function name='"
+        ++ name
+        ++ "' type='"
+        ++ type_
+        ++ "'/>"
+        ++ comment
+
+
+renderValue name type_ _ =
+    Html.div []
+        [ Html.p []
+            [ Html.text name
+            , Html.text ": "
+            , Html.pre [] [ Html.text type_ ]
+            ]
+        ]
+
+
+unionTag =
+    Markdown.Html.tag "union" renderUnion
+        |> Markdown.Html.withAttribute "name"
+        |> Markdown.Html.withAttribute "args"
+        |> Markdown.Html.withAttribute "cases"
+
+
+markdownForUnions { comment, name, args, cases } =
+    "<union name='"
+        ++ name
+        ++ "' args='"
+        ++ String.join " " args
+        ++ "' cases='"
+        ++ (List.map (String.join " ") cases
+                |> String.join "|"
+           )
+        ++ "'>"
+        ++ comment
+        ++ "</union>"
+
+
+renderUnion name args cases children =
+    let
+        renderCases =
+            "= " ++ String.replace "|" "\n| " cases
+    in
+    Html.div []
+        [ Html.p []
+            [ Html.span [] [ Html.text "type " ]
+            , Html.text name
+            , Html.text " "
+            , Html.text args
+            , Html.pre [] [ Html.text renderCases ]
+            ]
+        , Html.div [] children
+        ]
+
+
 view :
     Maybe PageUrl
     -> Shared.Model
@@ -135,6 +198,9 @@ view :
     -> View Msg
 view maybeUrl sharedModel static =
     let
+        moduleData =
+            static.data.moduleData
+
         customRenderer =
             let
                 renderer =
@@ -143,11 +209,8 @@ view maybeUrl sharedModel static =
             { renderer
                 | html =
                     Markdown.Html.oneOf
-                        [ Markdown.Html.tag "union"
-                            (\name children ->
-                                Html.p [] [ Html.span [] [ Html.text "type " ], Html.text name ]
-                            )
-                            |> Markdown.Html.withAttribute "name"
+                        [ unionTag
+                        , valueTag
                         ]
             }
 
@@ -156,23 +219,16 @@ view maybeUrl sharedModel static =
                 |> List.map Markdown.Parser.deadEndToString
                 |> String.join "\n"
 
-        markdownForValues { comment, type_, name } =
-            name ++ ": " ++ type_ ++ "\n\n" ++ comment
-
-        markdownForUnions { comment, name, args, cases } =
-            "<union name='" ++ name ++ "'/>" ++ "\n\n" ++ comment
-
-        replaceUnions item =
-            Dict.get item static.data.moduleData.unions
-                |> Maybe.map markdownForUnions
-
-        replaceValues item =
-            Dict.get item static.data.moduleData.values
-                |> Maybe.map markdownForValues
+        replaceFn values markdown item =
+            Dict.get item values
+                |> Maybe.map markdown
 
         replaceItem item =
             item
-                |> Maybe.Extra.oneOf [ replaceValues, replaceUnions ]
+                |> Maybe.Extra.oneOf
+                    [ replaceFn moduleData.values markdownForValues
+                    , replaceFn moduleData.unions markdownForUnions
+                    ]
                 |> Maybe.withDefault "N/A"
 
         replaceDocs docsLine =
