@@ -73,7 +73,7 @@ view maybeUrl sharedModel static =
                                 Html.a
                                     [ Route.Package__User___Name_ { user = user, name = name }
                                         |> Route.toPath
-                                        |> Path.toAbsolute
+                                        |> Path.toRelative
                                         |> Attrs.href
                                     ]
                                     [ Html.text packageName ]

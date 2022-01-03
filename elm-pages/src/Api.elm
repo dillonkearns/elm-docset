@@ -1,10 +1,41 @@
 module Api exposing (routes)
 
 import ApiRoute
+import Data
 import DataSource exposing (DataSource)
+import DataSource.Http
 import Html exposing (Html)
 import Json.Encode
+import OptimizedDecoder as Decode
+import Pages.Secrets as Secrets
 import Route exposing (Route)
+
+
+modulesDataSource : String -> String -> DataSource { user : String, name : String, modules : List Data.Module }
+modulesDataSource user name =
+    DataSource.Http.get
+        (Secrets.succeed ("https://package.elm-lang.org/packages/" ++ user ++ "/" ++ name ++ "/latest/docs.json"))
+        (Decode.list Data.moduleDecoder)
+        |> DataSource.map
+            (\modules ->
+                { user = user, name = name, modules = modules }
+            )
+
+
+packagesDataSource : DataSource (List Data.PackageInfo)
+packagesDataSource =
+    DataSource.Http.get
+        (Secrets.succeed "https://package.elm-lang.org/search.json")
+        (Decode.list Data.packageInfoDecoder)
+
+
+listModules path =
+    List.map (\m -> insertDb m.name "Module" ("/package/" ++ path ++ "/" ++ m.slug ++ "/index.html"))
+        >> String.join "\n"
+
+
+insertDb name type_ path =
+    "INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES (\"" ++ name ++ "\", \"" ++ type_ ++ "\" ,\"" ++ path ++ "\");"
 
 
 routes :
@@ -12,58 +43,41 @@ routes :
     -> (Html Never -> String)
     -> List (ApiRoute.ApiRoute ApiRoute.Response)
 routes getStaticRoutes htmlToString =
-    []
-
-
-
-{- [ ApiRoute.succeed
-       (\author package ->
-           DataSource.succeed
-               { body = htmlToString (myRenderHtmlFunction author package) }
-       )
-       |> ApiRoute.literal "api"
-       |> ApiRoute.slash
-       |> ApiRoute.capture
-       |> ApiRoute.slash
-       |> ApiRoute.capture
-       |> ApiRoute.slash
-       |> ApiRoute.literal "latest.html"
-       |> ApiRoute.buildTimeRoutes
-           (\route ->
-               DataSource.succeed
-                   [ route "dillonkearns" "elm-pages"
-                   , route "elm" "core"
-                   ]
-           )
-   , ApiRoute.succeed
-       (\userId ->
-           DataSource.succeed
-               { body =
-                   Json.Encode.object
-                       [ ( "id", Json.Encode.int userId )
-                       , ( "name"
-                         , Html.p [] [ Html.text <| "Data for user " ++ String.fromInt userId ]
-                               |> htmlToString
-                               |> Json.Encode.string
-                         )
-                       ]
-                       |> Json.Encode.encode 2
-               }
-       )
-       |> ApiRoute.literal "users"
-       |> ApiRoute.slash
-       |> ApiRoute.int
-       |> ApiRoute.literal ".json"
-       |> ApiRoute.buildTimeRoutes
-           (\route ->
-               DataSource.succeed
-                   [ route 1
-                   , route 2
-                   , route 3
-                   ]
-           )
-   ]
--}
+    [ ApiRoute.succeed
+        (packagesDataSource
+            |> DataSource.andThen
+                (\packages ->
+                    packages
+                        |> List.map
+                            (\{ splittedName } ->
+                                modulesDataSource (Tuple.first splittedName) (Tuple.second splittedName)
+                            )
+                        |> DataSource.combine
+                )
+            |> DataSource.map
+                (\i ->
+                    List.map
+                        (\{ name, user, modules } ->
+                            insertDb (user ++ "/" ++ name)
+                                "Package"
+                                ("/package/" ++ user ++ "/" ++ name ++ "/index.html")
+                                ++ "\n"
+                                ++ listModules (user ++ "/" ++ name) modules
+                        )
+                        i
+                        |> String.join "\n"
+                        |> (\body ->
+                                { body =
+                                    "CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT);\n"
+                                        ++ "CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path);\n"
+                                        ++ body
+                                }
+                           )
+                )
+        )
+        |> ApiRoute.literal "docs.json"
+        |> ApiRoute.single
+    ]
 
 
 myRenderHtmlFunction author package =

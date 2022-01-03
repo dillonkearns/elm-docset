@@ -124,10 +124,7 @@ view maybeUrl sharedModel static =
 
         toLink user name moduleName =
             Html.a
-                [ Route.Package__User___Name___SPLAT_ { user = user, name = name, splat = ( moduleName, [] ) }
-                    |> Route.toPath
-                    |> Path.toAbsolute
-                    |> Attrs.href
+                [ Attrs.href <| "./" ++ moduleName
                 ]
                 [ Html.text <| moduleName ]
 
