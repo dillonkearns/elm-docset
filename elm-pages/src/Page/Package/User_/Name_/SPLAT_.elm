@@ -106,20 +106,7 @@ head :
     StaticPayload Data RouteParams
     -> List Head.Tag
 head static =
-    Seo.summary
-        { canonicalUrlOverride = Nothing
-        , siteName = "elm-pages"
-        , image =
-            { url = Pages.Url.external "TODO"
-            , alt = "elm-pages logo"
-            , dimensions = Nothing
-            , mimeType = Nothing
-            }
-        , description = "TODO"
-        , locale = Nothing
-        , title = "TODO title" -- metadata.title -- TODO
-        }
-        |> Seo.website
+    []
 
 
 type alias Data =
@@ -253,9 +240,6 @@ view :
     -> View Msg
 view maybeUrl sharedModel static =
     let
-        binops =
-            Debug.log "binops" moduleData.binops
-
         moduleData =
             static.data.moduleData
 
@@ -263,6 +247,9 @@ view maybeUrl sharedModel static =
             let
                 renderer =
                     Markdown.Renderer.defaultHtmlRenderer
+
+                renderLtGt =
+                    String.replace "&lt;" "<" << String.replace "&gt;" ">"
             in
             { renderer
                 | html =
@@ -272,6 +259,14 @@ view maybeUrl sharedModel static =
                         , binOpTag
                         , aliasTag
                         ]
+                , codeSpan = \content -> Html.code [] [ Html.text <| renderLtGt content ]
+                , codeBlock =
+                    \{ body, language } ->
+                        Html.pre []
+                            [ Html.code []
+                                [ Html.text <| renderLtGt body
+                                ]
+                            ]
             }
 
         deadEndsToString ends =
@@ -296,11 +291,14 @@ view maybeUrl sharedModel static =
         replaceDocs docsLine =
             String.dropLeft 6 docsLine
                 |> String.split ", "
-                |> Debug.log "items"
                 |> List.map (\item -> "### " ++ item ++ "\n" ++ replaceItem item)
                 |> String.join "\n"
 
         updatedComment =
+            let
+                removeLtGt =
+                    String.replace "<" "&lt;" << String.replace ">" "&gt;"
+            in
             static.data.moduleData.comment
                 |> String.split "\n"
                 |> List.map
@@ -312,7 +310,6 @@ view maybeUrl sharedModel static =
                             line
                     )
                 |> String.join "\n"
-                |> Debug.log "markdown"
 
         toMarkdown =
             case
@@ -336,7 +333,7 @@ view maybeUrl sharedModel static =
                 ]
                 [ Html.text <| user ++ "/" ++ name ]
     in
-    { title = ""
+    { title = static.data.name
     , body =
         [ toLink static.data.user static.data.name
         , Html.h1 [] [ Html.text static.data.moduleData.name ]

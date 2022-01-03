@@ -32,11 +32,17 @@ packageInfoDecoder =
         |> Decode.required "version" Decode.string
 
 
+decodeSanitizedComment =
+    Decode.string
+        |> Decode.map
+            (String.replace "<" "&lt;" << String.replace ">" "&gt;")
+
+
 moduleDecoder : Decode.Decoder Module
 moduleDecoder =
     Decode.decode Module
         |> Decode.required "name" Decode.string
-        |> Decode.required "comment" Decode.string
+        |> Decode.required "comment" decodeSanitizedComment
         |> Decode.required "aliases" decodeAliases
         |> Decode.required "binops" decodeBinOps
         |> Decode.required "unions" decodeUnions
@@ -57,7 +63,7 @@ decodeAlias =
         |> Decode.required "name" Decode.string
         |> Decode.required "type" Decode.string
         |> Decode.required "args" (Decode.list Decode.string)
-        |> Decode.required "comment" Decode.string
+        |> Decode.required "comment" decodeSanitizedComment
 
 
 decodeBinOps : Decode.Decoder (Dict String BinOp)
@@ -72,7 +78,7 @@ decodeBinOp =
     Decode.decode Value
         |> Decode.required "name" (Decode.map (\binop -> "(" ++ binop ++ ")") Decode.string)
         |> Decode.required "type" Decode.string
-        |> Decode.required "comment" Decode.string
+        |> Decode.required "comment" decodeSanitizedComment
 
 
 decodeValues : Decode.Decoder (Dict String Value)
@@ -87,7 +93,7 @@ decodeValue =
     Decode.decode Value
         |> Decode.required "name" Decode.string
         |> Decode.required "type" Decode.string
-        |> Decode.required "comment" Decode.string
+        |> Decode.required "comment" decodeSanitizedComment
 
 
 decodeNonemptyList =
@@ -107,7 +113,7 @@ decodeUnion : Decode.Decoder Union
 decodeUnion =
     Decode.decode Union
         |> Decode.required "name" Decode.string
-        |> Decode.required "comment" Decode.string
+        |> Decode.required "comment" decodeSanitizedComment
         |> Decode.required "args" (Decode.list Decode.string)
         |> Decode.required "cases" (Decode.list decodeNonemptyList)
 

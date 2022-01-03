@@ -104,20 +104,7 @@ head :
     StaticPayload Data RouteParams
     -> List Head.Tag
 head static =
-    Seo.summary
-        { canonicalUrlOverride = Nothing
-        , siteName = "elm-pages"
-        , image =
-            { url = Pages.Url.external "TODO"
-            , alt = "elm-pages logo"
-            , dimensions = Nothing
-            , mimeType = Nothing
-            }
-        , description = "TODO"
-        , locale = Nothing
-        , title = "TODO title" -- metadata.title -- TODO
-        }
-        |> Seo.website
+    []
 
 
 view :
@@ -127,8 +114,12 @@ view :
     -> View Msg
 view maybeUrl sharedModel static =
     let
+        removeLtGt =
+            String.replace "<" "&lt;" << String.replace ">" "&gt;"
+
         toMarkdown =
             static.data.readme
+                |> removeLtGt
                 |> Markdown.toHtml []
 
         toLink user name moduleName =
