@@ -7,11 +7,10 @@ import Head
 import Head.Seo as Seo
 import Html
 import Html.Attributes as Attrs
-import OptimizedDecoder as Decode
-import OptimizedDecoder.Pipeline as Decode
+import Json.Decode as Decode
+import Json.Decode.Pipeline as Decode
 import Page exposing (Page, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
-import Pages.Secrets as Secrets
 import Pages.Url
 import Path
 import Route
@@ -20,11 +19,11 @@ import View exposing (View)
 
 
 type alias Model =
-    ()
+    {}
 
 
 type alias Msg =
-    Never
+    ()
 
 
 type alias RouteParams =
@@ -46,7 +45,7 @@ page =
 
 data : DataSource Data
 data =
-    DataSource.Http.get (Secrets.succeed "https://package.elm-lang.org/search.json")
+    DataSource.Http.get "https://package.elm-lang.org/search.json"
         (Decode.list Data.packageInfoDecoder)
 
 

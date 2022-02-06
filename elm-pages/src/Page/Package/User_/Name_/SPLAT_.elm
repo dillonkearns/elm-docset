@@ -8,14 +8,13 @@ import Head
 import Head.Seo as Seo
 import Html
 import Html.Attributes as Attrs
+import Json.Decode as Decode
 import Markdown.Html
 import Markdown.Parser
 import Markdown.Renderer
 import Maybe.Extra
-import OptimizedDecoder as Decode
 import Page exposing (Page, PageWithState, StaticPayload)
 import Pages.PageUrl exposing (PageUrl)
-import Pages.Secrets as Secrets
 import Pages.Url
 import Path
 import Result
@@ -26,11 +25,11 @@ import View exposing (View)
 
 
 type alias Model =
-    ()
+    {}
 
 
 type alias Msg =
-    Never
+    ()
 
 
 type alias RouteParams =
@@ -39,9 +38,9 @@ type alias RouteParams =
 
 page : Page RouteParams Data
 page =
-    Page.prerender
+    Page.preRender
         { head = head
-        , routes = routes
+        , pages = pages
         , data = data
         }
         |> Page.buildNoState { view = view }
@@ -49,14 +48,14 @@ page =
 
 packagesDataSource =
     DataSource.Http.get
-        (Secrets.succeed "https://package.elm-lang.org/search.json")
+        "https://package.elm-lang.org/search.json"
         (Decode.list Data.packageInfoDecoder)
 
 
 modulesDataSource : String -> String -> DataSource { user : String, name : String, modules : List Data.Module }
 modulesDataSource user name =
     DataSource.Http.get
-        (Secrets.succeed ("https://package.elm-lang.org/packages/" ++ user ++ "/" ++ name ++ "/latest/docs.json"))
+        ("https://package.elm-lang.org/packages/" ++ user ++ "/" ++ name ++ "/latest/docs.json")
         (Decode.list Data.moduleDecoder)
         |> DataSource.map
             (\modules ->
@@ -64,8 +63,8 @@ modulesDataSource user name =
             )
 
 
-routes : DataSource (List RouteParams)
-routes =
+pages : DataSource (List RouteParams)
+pages =
     let
         toSplats : String -> String -> List Data.Module -> List RouteParams
         toSplats user name modules =

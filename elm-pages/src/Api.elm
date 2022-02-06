@@ -5,16 +5,15 @@ import Data
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Html exposing (Html)
+import Json.Decode as Decode
 import Json.Encode
-import OptimizedDecoder as Decode
-import Pages.Secrets as Secrets
 import Route exposing (Route)
 
 
 modulesDataSource : String -> String -> DataSource { user : String, name : String, modules : List Data.Module }
 modulesDataSource user name =
     DataSource.Http.get
-        (Secrets.succeed ("https://package.elm-lang.org/packages/" ++ user ++ "/" ++ name ++ "/latest/docs.json"))
+        ("https://package.elm-lang.org/packages/" ++ user ++ "/" ++ name ++ "/latest/docs.json")
         (Decode.list Data.moduleDecoder)
         |> DataSource.map
             (\modules ->
@@ -25,7 +24,7 @@ modulesDataSource user name =
 packagesDataSource : DataSource (List Data.PackageInfo)
 packagesDataSource =
     DataSource.Http.get
-        (Secrets.succeed "https://package.elm-lang.org/search.json")
+        "https://package.elm-lang.org/search.json"
         (Decode.list Data.packageInfoDecoder)
 
 
@@ -67,11 +66,9 @@ routes getStaticRoutes htmlToString =
                         i
                         |> String.join "\n"
                         |> (\body ->
-                                { body =
-                                    "CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT);\n"
-                                        ++ "CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path);\n"
-                                        ++ body
-                                }
+                                "CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT);\n"
+                                    ++ "CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path);\n"
+                                    ++ body
                            )
                 )
         )

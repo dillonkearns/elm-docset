@@ -5,11 +5,10 @@ import Data
 import DataSource exposing (DataSource)
 import DataSource.Http
 import Html exposing (Html)
-import OptimizedDecoder as Decode
-import OptimizedDecoder.Pipeline as Decode
+import Json.Decode as Decode
+import Json.Decode.Pipeline as Decode
 import Pages.Flags
 import Pages.PageUrl exposing (PageUrl)
-import Pages.Secrets as Secrets
 import Path exposing (Path)
 import Route exposing (Route)
 import SharedTemplate exposing (SharedTemplate)

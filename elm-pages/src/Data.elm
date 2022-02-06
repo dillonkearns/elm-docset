@@ -1,8 +1,8 @@
 module Data exposing (..)
 
 import Dict exposing (Dict)
-import OptimizedDecoder as Decode
-import OptimizedDecoder.Pipeline as Decode
+import Json.Decode as Decode
+import Json.Decode.Pipeline as Decode
 
 
 type alias PackageInfo =
@@ -14,7 +14,7 @@ type alias PackageInfo =
 
 
 packageInfoDecoder =
-    Decode.decode PackageInfo
+    Decode.succeed PackageInfo
         |> Decode.required "name" Decode.string
         |> Decode.required "name"
             (Decode.string
@@ -40,7 +40,7 @@ decodeSanitizedComment =
 
 moduleDecoder : Decode.Decoder Module
 moduleDecoder =
-    Decode.decode Module
+    Decode.succeed Module
         |> Decode.required "name" Decode.string
         |> Decode.required "comment" decodeSanitizedComment
         |> Decode.required "aliases" decodeAliases
@@ -59,7 +59,7 @@ decodeAliases =
 
 decodeAlias : Decode.Decoder Alias
 decodeAlias =
-    Decode.decode Alias
+    Decode.succeed Alias
         |> Decode.required "name" Decode.string
         |> Decode.required "type" Decode.string
         |> Decode.required "args" (Decode.list Decode.string)
@@ -75,7 +75,7 @@ decodeBinOps =
 
 decodeBinOp : Decode.Decoder BinOp
 decodeBinOp =
-    Decode.decode Value
+    Decode.succeed Value
         |> Decode.required "name" (Decode.map (\binop -> "(" ++ binop ++ ")") Decode.string)
         |> Decode.required "type" Decode.string
         |> Decode.required "comment" decodeSanitizedComment
@@ -90,7 +90,7 @@ decodeValues =
 
 decodeValue : Decode.Decoder Value
 decodeValue =
-    Decode.decode Value
+    Decode.succeed Value
         |> Decode.required "name" Decode.string
         |> Decode.required "type" Decode.string
         |> Decode.required "comment" decodeSanitizedComment
@@ -111,7 +111,7 @@ decodeUnions =
 
 decodeUnion : Decode.Decoder Union
 decodeUnion =
-    Decode.decode Union
+    Decode.succeed Union
         |> Decode.required "name" Decode.string
         |> Decode.required "comment" decodeSanitizedComment
         |> Decode.required "args" (Decode.list Decode.string)
