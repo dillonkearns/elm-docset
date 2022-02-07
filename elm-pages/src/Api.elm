@@ -1,5 +1,6 @@
 module Api exposing (routes)
 
+import Api.Name
 import ApiRoute
 import Data
 import DataSource exposing (DataSource)
@@ -74,6 +75,7 @@ routes getStaticRoutes htmlToString =
         )
         |> ApiRoute.literal "docs.json"
         |> ApiRoute.single
+    , Api.Name.route htmlToString
     ]
 
 
