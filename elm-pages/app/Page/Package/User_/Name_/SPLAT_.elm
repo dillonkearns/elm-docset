@@ -325,10 +325,10 @@ view maybeUrl sharedModel static =
 
         toLink user name =
             Html.a
-                [ Route.Package__User___Name_ { user = user, name = name }
-                    |> Route.toPath
-                    |> Path.toRelative
-                    |> Attrs.href
+                [--Route.Package__User___Name_ { user = user, name = name }
+                 --    |> Route.toPath
+                 --    |> Path.toRelative
+                 --    |> Attrs.href
                 ]
                 [ Html.text <| user ++ "/" ++ name ]
     in

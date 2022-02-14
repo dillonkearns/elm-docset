@@ -70,10 +70,10 @@ view maybeUrl sharedModel static =
                         case values of
                             [ user, name ] ->
                                 Html.a
-                                    [ Route.Package__User___Name_ { user = user, name = name }
-                                        |> Route.toPath
-                                        |> Path.toRelative
-                                        |> Attrs.href
+                                    [--Route.Package__User___Name_ { user = user, name = name }
+                                     --    |> Route.toPath
+                                     --    |> Path.toRelative
+                                     --    |> Attrs.href
                                     ]
                                     [ Html.text packageName ]
 

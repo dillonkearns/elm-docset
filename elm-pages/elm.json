@@ -3,7 +3,8 @@
     "source-directories": [
         "src",
         ".elm-pages",
-        "elm-pages/src"
+        "elm-pages/src",
+        "app"
     ],
     "elm-version": "0.19.1",
     "dependencies": {
