@@ -12,6 +12,7 @@
     "elm-tooling": "^1.3.0"
   },
   "devDependencies": {
-    "elm-pages": "file:../../../dillonkearns/elm-pages"
+    "elm-pages": "file:../../../dillonkearns/elm-pages",
+    "vite": "^2.8.4"
   }
 }

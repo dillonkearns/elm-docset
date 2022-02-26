@@ -66,7 +66,7 @@ readmeDataSource user name =
         , headers = []
         , body = DataSource.Http.emptyBody
         }
-        (DataSource.Http.expectString Result.Ok)
+        (DataSource.Http.expectString identity)
 
 
 pages : DataSource (List RouteParams)
