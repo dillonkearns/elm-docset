@@ -54,7 +54,7 @@ readmeDataSource user name =
         , headers = []
         , body = DataSource.Http.emptyBody
         }
-        (DataSource.Http.expectString identity)
+        DataSource.Http.expectString
 
 
 pages toRoute =
